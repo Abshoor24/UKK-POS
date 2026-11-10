@@ -14,20 +14,28 @@ const TOKEN_EXPIRED_IN = '8h';
  */
 
 function login(db, username, password, secret) {
-    if(typeof username !== 'string' || typeof password !== 'string') {
+    if (typeof username !== 'string' || typeof password !== 'string') {
         return null;
     }
 
     const user = db
-    .prepare('SELECT id, username, role, password FROM users WHERE username = ?')
-    .get(username.trim());
+        .prepare('SELECT id, username, role, password_hash FROM users WHERE username = ?')
+        .get(username.trim());
 
-    (!user || !bcrypt.compareSync(password, user.password)) && (user = null);
+    if (!user || !bcrypt.compareSync(password, user.password_hash)) {
+        return null;
+    }
 
-    const payload = {id: user.id, username: user.username, role: user.id};
-    const token = jwt.sign(payload, secret, {expiresIn: TOKEN_EXPIRED_IN});
+    const payload = { id: user.id, username: user.username, role: user.role };
+    const token = jwt.sign(payload, secret, { expiresIn: TOKEN_EXPIRED_IN });
 
-    /**
+    return {
+        token,
+        user: { id: user.id, username: user.username, role: user.role }
+    };
+}
+
+/**
  * Memeriksa token JWT.
  * @param {string} token - Token dari header Authorization.
  * @param {string} secret - Kunci rahasia yang sama dengan saat token dibuat.
@@ -35,14 +43,12 @@ function login(db, username, password, secret) {
  *          Isi token jika valid dan belum kedaluwarsa, atau null.
  */
 
-    function verifyToken(token, secret) {
-        try {
-            return jwt.verify(token, secret)
-        } catch (err) {
-            return null;
-        }
+function verifyToken(token, secret) {
+    try {
+        return jwt.verify(token, secret);
+    } catch (err) {
+        return null;
     }
-
 }
 
-module.exports = {login, verifyToken};
+module.exports = { login, verifyToken };
