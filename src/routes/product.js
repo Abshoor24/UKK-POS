@@ -1,7 +1,7 @@
 const express = require("express");
 const multer = require("multer");
 const { validateProduct } = require("../services/productValidator");
-const { detectImageType } = require("../services/imageType");
+const { detectImageType } = require("../services/imageValidator");
 
 const MAX_IMAGE_SIZE = 2 * 1024 * 1024; // 2MB
 

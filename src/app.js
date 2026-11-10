@@ -1,7 +1,7 @@
 const express = require('express');
 const path = require('path');
 const { createDB } = require('./db');
-const createProductsRouter = require('./routes/products');
+const createProductsRouter = require('./routes/product');
 
 const app = express();
 const db = createDB();

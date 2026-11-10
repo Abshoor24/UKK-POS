@@ -68,6 +68,14 @@ function createDB(file = path.join(__dirname, '../pos.db')) {
     ); 
     `);
 
+    const cols = db.prepare("PRAGMA table_info(products)").all().map(c => c.name);
+    if (!cols.includes('image')) {
+        db.exec("ALTER TABLE products ADD COLUMN image BLOB");
+    }
+    if (!cols.includes('image_type')) {
+        db.exec("ALTER TABLE products ADD COLUMN image_type TEXT");
+    }
+
     seedUsers(db);
     seedProducts(db);
     return db;
