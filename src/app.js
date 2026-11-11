@@ -15,6 +15,20 @@ if (!process.env.JWT_SECRET) {
 const app = express();
 const db = createDB();
 
+// CORS untuk frontend terpisah. Harus dipasang sebelum route /api
+// agar preflight OPTIONS tidak ditolak middleware autentikasi.
+app.use((req, res, next) => {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Headers', 'Authorization, Content-Type');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+
+  if (req.method === 'OPTIONS') {
+    return res.sendStatus(204);
+  }
+
+  next();
+});
+
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
