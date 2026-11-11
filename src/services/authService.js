@@ -1,7 +1,7 @@
-const bcrypt = require('bcrypt');
-const jwt = require('jsonwebtoken');
+const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
 
-const TOKEN_EXPIRED_IN = '8h';
+const TOKEN_EXPIRED_IN = "8h";
 
 /**
  * Memeriksa username dan password, lalu membuat token JWT jika benar.
@@ -14,25 +14,27 @@ const TOKEN_EXPIRED_IN = '8h';
  */
 
 function login(db, username, password, secret) {
-    if (typeof username !== 'string' || typeof password !== 'string') {
-        return null;
-    }
+  if (typeof username !== "string" || typeof password !== "string") {
+    return null;
+  }
 
-    const user = db
-        .prepare('SELECT id, username, role, password_hash FROM users WHERE username = ?')
-        .get(username.trim());
+  const user = db
+    .prepare(
+      "SELECT id, username, role, password_hash FROM users WHERE username = ?",
+    )
+    .get(username.trim());
 
-    if (!user || !bcrypt.compareSync(password, user.password_hash)) {
-        return null;
-    }
+  if (!user || !bcrypt.compareSync(password, user.password_hash)) {
+    return null;
+  }
 
-    const payload = { id: user.id, username: user.username, role: user.role };
-    const token = jwt.sign(payload, secret, { expiresIn: TOKEN_EXPIRED_IN });
+  const payload = { id: user.id, username: user.username, role: user.role };
+  const token = jwt.sign(payload, secret, { expiresIn: TOKEN_EXPIRED_IN });
 
-    return {
-        token,
-        user: { id: user.id, username: user.username, role: user.role }
-    };
+  return {
+    token,
+    user: { id: user.id, username: user.username, role: user.role },
+  };
 }
 
 /**
@@ -44,11 +46,11 @@ function login(db, username, password, secret) {
  */
 
 function verifyToken(token, secret) {
-    try {
-        return jwt.verify(token, secret);
-    } catch (err) {
-        return null;
-    }
+  try {
+    return jwt.verify(token, secret);
+  } catch (err) {
+    return null;
+  }
 }
 
 module.exports = { login, verifyToken };
