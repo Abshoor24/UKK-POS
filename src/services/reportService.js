@@ -12,7 +12,7 @@ const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
  */
 
 
-function isDateTime(value) {
+function isDateText(value) {
     return typeof value === 'string' && DATE_PATTERN.test(value);
 }
 
@@ -29,11 +29,10 @@ function validateHistoryQuery(query) {
     const errors = [];
 
     const from = input.from === undefined ? null : input.from;
-
     const to = input.to === undefined ? null : input.to;
 
     if (from !== null && !isDateText(from)) {
-        errors.push('Tanggal awal harus berformat YYY-MM-DD');
+        errors.push('Tanggal awal harus berformat YYYY-MM-DD');
     }
 
     if (to !== null && !isDateText(to)) {
@@ -71,26 +70,26 @@ function listTransactions(db, user, filters) {
     const params = [];
 
     if (user.role !== 'admin') {
-        condition.push('t.user_id = ?')
+        conditions.push('t.user_id = ?');
         params.push(user.id);
     }
     if (filters.from) {
-        conditions.push('date(t.created_at) => ?');
-        params.push(filters.from)
+        conditions.push('date(t.created_at) >= ?');
+        params.push(filters.from);
     }
 
     if (filters.to) {
-        conditions.push('date(t.created_at) <= ?')
+        conditions.push('date(t.created_at) <= ?');
         params.push(filters.to);
     }
 
-    const where = conditions.length > 0 ?  `WHERE ${conditions.join('AND')}` : '';
+    const where = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
 
     return db
-        .prepare(`SELECT t.id, u.username AS cashier, t.subtotal, t.discount, t.tax, t.total, t.created_at.
+        .prepare(`SELECT t.id, u.username AS cashier, t.subtotal, t.discount, t.tax, t.total, t.created_at,
         (SELECT COALESCE(SUM(qty), 0)
-        FROM transaction_items WHERE transaction_id= 
-        t.id) AS item_count
+        FROM transaction_items WHERE transaction_id = t.id) AS item_count
+        FROM transactions t
         JOIN users u ON u.id = t.user_id
         ${where} ORDER BY t.id DESC LIMIT ?
             `)
@@ -108,23 +107,23 @@ function listTransactions(db, user, filters) {
  */
 
 function getDashboardSummary(db, user) {
-    const isAdmin = user.role === 'admin'
+    const isAdmin = user.role === 'admin';
     const ownOnly = isAdmin ? '' : 'AND user_id = ?';
     const params = isAdmin ? [] : [user.id];
 
     const today = db
-        .prepare(`SELECT COUNT(*) AS transactions, COALESCE(SUM(total), 0) AS revenue FROM transactions WHERE data(created_at) = date('now', 'localtime') ${ownOnly}`)
+        .prepare(`SELECT COUNT(*) AS transactions, COALESCE(SUM(total), 0) AS revenue FROM transactions WHERE date(created_at) = date('now', 'localtime') ${ownOnly}`)
         .get(...params);
 
-        const lowStock = db
+    const lowStock = db
         .prepare(`SELECT id, name, stock FROM products WHERE is_active = 1 AND stock <= ? ORDER BY stock, name`)
-        .all(LOW_STOCK_LIMIT);
+        .all(LOW_STOCK);
 
-        const {total} = db
+    const {total} = db
         .prepare('SELECT COUNT(*) AS total FROM products WHERE is_active = 1')
         .get();
         
-        return {today, low_stock: lowStock, active_products: total};
+    return {today, low_stock: lowStock, active_products: total};
 }       
 
 module.exports = { validateHistoryQuery, listTransactions, getDashboardSummary };

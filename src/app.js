@@ -2,13 +2,14 @@ const express = require('express');
 const path = require('path');
 const { createDB } = require('./db');
 const { authenticate } = require('./middleware/auth');
+const { productAccess } = require('./middleware/productAccess');
 const createAuthRouter = require('./routes/auth');
 const createProductRouter = require('./routes/product');
 const createTransactionsRouter = require('./routes/transaction');
 const createDashboardRouter = require('./routes/dashboard');
 
 if (!process.env.JWT_SECRET) {
-  throw new Error('JWT_SECRET belum diatur. Buat file .env')
+  throw new Error('JWT_SECRET belum diatur. Buat file .env (lihat .env.example).');
 }
 
 const app = express();
@@ -22,9 +23,9 @@ app.get('/api/health', (req, res) => {
 });
 
 app.use('/api/auth', createAuthRouter(db));
-app.use('/api/products', createProductRouter(db));
+app.use('/api/products', productAccess, createProductRouter(db));
 app.use('/api/transactions', authenticate, createTransactionsRouter(db));
-app.use('/api/dashboard', authenticate, createDashboardRouter);
+app.use('/api/dashboard', authenticate, createDashboardRouter(db));
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
