@@ -86,6 +86,38 @@ function getTransactionById(db, id) {
 }
 
 /**
+ * Menghitung pratinjau total keranjang tanpa menyimpan transaksi.
+ * Harga diambil dari database agar hasilnya sama dengan saat checkout.
+ * @param {import('better-sqlite3').Database} db - Koneksi database.
+ * @param {*} rawItems - Array { product_id, qty } dari request.
+ * @returns {{subtotal: number, discount: number, tax: number, total: number}} Total pratinjau.
+ * @throws {TransactionError} Jika keranjang atau produk tidak valid.
+ */
+function previewTransaction(db, rawItems) {
+    const items = normalizeItems(rawItems);
+    const findProduct = db.prepare(
+        'SELECT id, name, price FROM products WHERE id = ? AND is_active = 1'
+    );
+
+    const lines = items.map(({productId, qty}) => {
+        const product = findProduct.get(productId);
+        if (!product) {
+            throw new TransactionError(`Product dengan ID ${productId} not found`);
+        }
+        return {productId: product.id, name: product.name, price: product.price, qty};
+    });
+
+    const totals = calculateTotal(lines);
+
+    return {
+        subtotal: totals.subTotal,
+        discount: totals.discount,
+        tax: totals.tax,
+        total: totals.total,
+    };
+}
+
+/**
  * Membuat transaksi baru: memeriksa produk dan stok, menghitung total,
  * menyimpan transaksi dan item, lalu mengurangi stok.
  * Semua penyimpanan dilakukan dalam satu database transaction:
@@ -149,4 +181,4 @@ function createTransaction(db, userId, rawItems) {
     return getTransactionById(db, save());
 }
 
-module.exports = { createTransaction, getTransactionById, normalizeItems, TransactionError };
+module.exports = { createTransaction, getTransactionById, previewTransaction, normalizeItems, TransactionError };

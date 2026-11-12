@@ -2,6 +2,7 @@ const express = require('express');
 const {
     createTransaction,
     getTransactionById,
+    previewTransaction,
     TransactionError,
 } = require('../services/transactionService');
 const { validateHistoryQuery, listTransactions } = require('../services/reportService');
@@ -14,6 +15,19 @@ const { validateHistoryQuery, listTransactions } = require('../services/reportSe
  */
 function createTransactionsRouter(db) {
     const router = express.Router();
+
+    // POST /api/transactions/preview -> hitung total keranjang tanpa menyimpan
+    router.post('/preview', (req, res) => {
+        try {
+            const totals = previewTransaction(db, req.body && req.body.items);
+            res.json(totals);
+        } catch (err) {
+            if (err instanceof TransactionError) {
+                return res.status(400).json({ errors: [err.message] });
+            }
+            throw err;
+        }
+    });
 
     // POST /api/transactions -> buat transaksi baru atas nama pengguna yang login
     router.post('/', (req, res) => {
