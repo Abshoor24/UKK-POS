@@ -23,7 +23,7 @@ function productAccess(req, res, next) {
             return next();
         }
 
-        requireRole('admin')(req, res, next);
+    requireRole('admin')(req, res, next);
     });
 }
 
