@@ -1,4 +1,4 @@
-const {calculateTotal} = require('./calculator');
+const {calculateTotal, getDiscountRate, TAX_RATE} = require('./calculator');
 const {toNonNegativeInt} = require('./productValidator');
 
 /**
@@ -81,8 +81,13 @@ function getTransactionById(db, id) {
                   WHERE ti.transaction_id = ?
                   ORDER BY ti.id`)
         .all(id);
-    
-    return {...header, items};
+
+    return {
+        ...header,
+        discount_rate: getDiscountRate(header.subtotal),
+        tax_rate: TAX_RATE,
+        items,
+    };
 }
 
 /**
@@ -90,7 +95,10 @@ function getTransactionById(db, id) {
  * Harga diambil dari database agar hasilnya sama dengan saat checkout.
  * @param {import('better-sqlite3').Database} db - Koneksi database.
  * @param {*} rawItems - Array { product_id, qty } dari request.
- * @returns {{subtotal: number, discount: number, tax: number, total: number}} Total pratinjau.
+ * @returns {{subtotal: number, discount: number, tax: number, total: number,
+ *            discount_rate: number, tax_rate: number,
+ *            items: Array<{product_id: number, name: string, price: number, qty: number,
+ *                          line_total: number}>}} Total pratinjau.
  * @throws {TransactionError} Jika keranjang atau produk tidak valid.
  */
 function previewTransaction(db, rawItems) {
@@ -110,10 +118,19 @@ function previewTransaction(db, rawItems) {
     const totals = calculateTotal(lines);
 
     return {
-        subtotal: totals.subTotal,
+        subtotal: totals.subtotal,
         discount: totals.discount,
         tax: totals.tax,
         total: totals.total,
+        discount_rate: getDiscountRate(totals.subtotal),
+        tax_rate: TAX_RATE,
+        items: lines.map((line) => ({
+            product_id: line.productId,
+            name: line.name,
+            price: line.price,
+            qty: line.qty,
+            line_total: line.price * line.qty,
+        })),
     };
 }
 
@@ -155,7 +172,7 @@ function createTransaction(db, userId, rawItems) {
 
     const header = db
         .prepare(`INSERT INTO transactions (user_id, subtotal, discount, tax, total) VALUES(?, ?, ?, ?, ?)`)
-        .run(userId, totals.subTotal, totals.discount, totals.tax, totals.total);
+        .run(userId, totals.subtotal, totals.discount, totals.tax, totals.total);
         
         const transactionId = header.lastInsertRowid;
         
