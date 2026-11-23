@@ -2,9 +2,11 @@ const { createDB } = require('../src/db');
 const {
   createTransaction,
   getTransactionById,
+  previewTransaction,
   normalizeItems,
   TransactionError,
 } = require('../src/services/transactionService');
+const { TAX_RATE } = require('../src/services/calculator');
 
 let db;
 let kasirId;
@@ -49,6 +51,40 @@ describe('normalizeItems', () => {
   });
 });
 
+describe('previewTransaction', () => {
+  test('mengembalikan total, tarif, dan line_total dari backend', () => {
+    const preview = previewTransaction(db, [
+      { product_id: idOf('Nasi Goreng'), qty: 1 },
+      { product_id: idOf('Ayam Bakar'), qty: 1 },
+      { product_id: idOf('Es Teh'), qty: 1 },
+    ]);
+
+    expect(preview.subtotal).toBe(58000);
+    expect(preview.discount).toBe(5800);
+    expect(preview.tax).toBe(5220);
+    expect(preview.total).toBe(57420);
+    expect(preview.discount_rate).toBe(0.1);
+    expect(preview.tax_rate).toBe(TAX_RATE);
+    expect(preview.items).toHaveLength(3);
+    expect(preview.items[0]).toMatchObject({
+      product_id: idOf('Nasi Goreng'),
+      name: 'Nasi Goreng',
+      price: 25000,
+      qty: 1,
+      line_total: 25000,
+    });
+  });
+
+  test('preview tidak menyimpan transaksi', () => {
+    previewTransaction(db, [{ product_id: idOf('Es Teh'), qty: 2 }]);
+    expect(countTransactions()).toBe(0);
+  });
+
+  test('keranjang kosong ditolak', () => {
+    expect(() => previewTransaction(db, [])).toThrow(TransactionError);
+  });
+});
+
 describe('createTransaction', () => {
   test('contoh slide: 58.000 -> diskon 5.800, pajak 5.220, total 57.420', () => {
     const receipt = createTransaction(db, kasirId, [
@@ -63,6 +99,8 @@ describe('createTransaction', () => {
     expect(receipt.total).toBe(57420);
     expect(receipt.items).toHaveLength(3);
     expect(receipt.cashier).toBe('kasir');
+    expect(receipt.discount_rate).toBe(0.1);
+    expect(receipt.tax_rate).toBe(TAX_RATE);
   });
 
   test('produk yang sama dua kali digabung menjadi satu baris', () => {
