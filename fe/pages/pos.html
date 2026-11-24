@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kasir - POS UKK</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body data-page="pos">
+  <header class="app-header">
+    <div class="app-header__inner">
+      <a class="brand" href="dashboard.html">
+        <span class="brand__mark">POS</span>
+        <span>POS UKK</span>
+      </a>
+      <nav class="main-nav" aria-label="Navigasi utama">
+        <a href="dashboard.html" data-nav="dashboard">Dashboard</a>
+        <a href="pos.html" data-nav="pos">Kasir</a>
+        <a href="products.html" data-nav="products">Produk</a>
+        <a href="settings.html" data-nav="settings" data-admin-only hidden>Pengaturan</a>
+        <a href="transactions.html" data-nav="transactions">Riwayat</a>
+      </nav>
+      <div class="user-box">
+        <span id="nav-user" class="user-box__name">-</span>
+        <span id="nav-role" class="badge">-</span>
+        <button id="logout-btn" class="btn btn--ghost btn--small" type="button">Keluar</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="page">
+    <section class="page-head">
+      <div>
+        <h1>Kasir</h1>
+        <p class="muted">Pilih produk, atur jumlah, lalu proses pembayaran.</p>
+      </div>
+      <div class="head-actions">
+        <span id="pos-cashier" class="badge">Kasir</span>
+        <button id="pos-refresh-btn" class="btn btn--ghost" type="button">Muat ulang produk</button>
+      </div>
+    </section>
+
+    <div id="pos-alert" class="alert alert--error" role="alert" hidden></div>
+
+    <div class="pos-layout">
+      <section class="panel pos-products" aria-label="Daftar produk">
+        <div class="toolbar">
+          <label class="field field--grow" for="pos-search">
+            Cari produk
+            <input id="pos-search" type="search" placeholder="Cari nama atau kategori...">
+          </label>
+          <label class="field" for="pos-category">
+            Kategori
+            <select id="pos-category">
+              <option value="">Semua kategori</option>
+            </select>
+          </label>
+        </div>
+
+        <div id="pos-products-loading" class="loading">Memuat produk...</div>
+        <div id="pos-products-empty" class="empty-state" hidden>Tidak ada produk yang cocok.</div>
+        <div id="pos-products-grid" class="product-grid" hidden></div>
+      </section>
+
+      <aside class="panel pos-cart" aria-label="Keranjang dan pembayaran">
+        <div class="pos-cart__head">
+          <h2>Keranjang</h2>
+          <span id="cart-count" class="badge">0 item</span>
+        </div>
+
+        <div id="cart-empty" class="empty-state">Keranjang masih kosong. Klik produk untuk menambahkan.</div>
+        <ul id="cart-list" class="cart-list" hidden></ul>
+
+        <div class="summary">
+          <div class="summary-row">
+            <span>Subtotal</span>
+            <span id="summary-subtotal">Rp 0</span>
+          </div>
+          <div class="summary-row">
+            <span id="summary-discount-label">Diskon</span>
+            <span id="summary-discount">Rp 0</span>
+          </div>
+          <div class="summary-row">
+            <span id="summary-tax-label">Pajak</span>
+            <span id="summary-tax">Rp 0</span>
+          </div>
+          <div class="summary-row summary-row--total">
+            <span>Total</span>
+            <span id="summary-total">Rp 0</span>
+          </div>
+        </div>
+
+        <div class="cash-panel">
+          <div class="cash-panel__row">
+            <label class="field" for="paid-input">
+              Uang diterima (Rp)
+              <input id="paid-input" type="number" min="0" step="1" inputmode="numeric" placeholder="0">
+            </label>
+            <button id="exact-pay-btn" class="btn btn--ghost" type="button">Uang pas</button>
+          </div>
+          <div class="change-row">
+            <span>Kembalian</span>
+            <strong id="change-value">Rp 0</strong>
+          </div>
+        </div>
+
+        <button id="checkout-btn" class="btn btn--primary btn--block" type="button" disabled>
+          Proses Pembayaran
+        </button>
+        <p class="muted small">
+          Nominal uang diterima hanya dipakai untuk menghitung kembalian di layar dan struk.
+          Backend hanya menerima item dan qty, lalu menghitung total dari harga database.
+        </p>
+      </aside>
+    </div>
+  </main>
+
+  <div id="receipt-modal" class="modal" hidden>
+    <div class="modal__backdrop" data-close-receipt></div>
+    <div class="modal__panel modal__panel--receipt" role="dialog" aria-modal="true"
+      aria-labelledby="receipt-modal-title">
+      <div class="modal__head">
+        <h2 id="receipt-modal-title">Transaksi Berhasil</h2>
+        <button class="icon-btn" type="button" aria-label="Tutup" data-close-receipt>&times;</button>
+      </div>
+
+      <div id="receipt-alert" class="alert alert--warning" role="alert" hidden></div>
+      <div id="receipt-container" class="receipt-wrap"></div>
+
+      <div class="modal__footer">
+        <button class="btn btn--ghost" type="button" data-close-receipt>Tutup</button>
+        <button id="print-receipt-btn" class="btn btn--primary" type="button">Cetak Struk</button>
+        <button id="new-transaction-btn" class="btn btn--primary" type="button">Transaksi Baru</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="../js/config.js"></script>
+  <script src="../js/utils.js"></script>
+  <script src="../js/auth.js"></script>
+  <script src="../js/api.js"></script>
+  <script src="../js/layout.js"></script>
+  <script src="../js/receipt.js"></script>
+  <script src="../js/pos.js"></script>
+</body>
+</html>

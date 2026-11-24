@@ -1,6 +1,8 @@
 /**
- * Tarif pajak yang dikenakan setelah diskon.
- * Ubah nilai ini bila tarif pajak berubah; frontend mengikuti dari respons API.
+ * Tarif pajak BAWAAN (10%). Nilai ini digunakan sebagai nilai cadangan oleh
+ * calculateTotal ketika tarif pajak tidak diberikan dalam aturan pemanggilan.
+ * Tarif aktif aplikasi disimpan di database dan dapat diubah oleh admin melalui
+ * pengaturan aplikasi.
  * @type {number}
  */
 const TAX_RATE = 0.1;

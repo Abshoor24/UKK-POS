@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard - POS UKK</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body data-page="dashboard">
+  <header class="app-header">
+    <div class="app-header__inner">
+      <a class="brand" href="dashboard.html">
+        <span class="brand__mark">POS</span>
+        <span>POS UKK</span>
+      </a>
+      <nav class="main-nav" aria-label="Navigasi utama">
+        <a href="dashboard.html" data-nav="dashboard">Dashboard</a>
+        <a href="pos.html" data-nav="pos">Kasir</a>
+        <a href="products.html" data-nav="products">Produk</a>
+        <a href="settings.html" data-nav="settings" data-admin-only hidden>Pengaturan</a>
+        <a href="transactions.html" data-nav="transactions">Riwayat</a>
+      </nav>
+      <div class="user-box">
+        <span id="nav-user" class="user-box__name">-</span>
+        <span id="nav-role" class="badge">-</span>
+        <button id="logout-btn" class="btn btn--ghost btn--small" type="button">Keluar</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="page">
+    <section class="page-head">
+      <div>
+        <h1>Dashboard</h1>
+        <p id="dashboard-subtitle" class="muted">Ringkasan penjualan hari ini.</p>
+      </div>
+      <div class="head-actions">
+        <button id="refresh-btn" class="btn btn--ghost" type="button">Muat ulang</button>
+      </div>
+    </section>
+
+    <div id="summary-error" class="alert alert--error" role="alert" hidden></div>
+    <div id="summary-loading" class="loading">Memuat ringkasan hari ini...</div>
+
+    <section class="stat-grid stat-grid--dashboard" aria-label="Ringkasan hari ini">
+      <article class="stat-card">
+        <span class="stat-card__label">Transaksi hari ini</span>
+        <strong id="stat-transactions" class="stat-card__value">-</strong>
+        <span class="muted small">Jumlah transaksi</span>
+      </article>
+      <article class="stat-card">
+        <span class="stat-card__label">Pendapatan hari ini</span>
+        <strong id="stat-revenue" class="stat-card__value">-</strong>
+        <span class="muted small">Total setelah diskon dan pajak</span>
+      </article>
+      <article class="stat-card">
+        <span class="stat-card__label">Produk aktif</span>
+        <strong id="stat-products" class="stat-card__value">-</strong>
+        <span class="muted small">Produk yang dapat dijual</span>
+      </article>
+      <article class="stat-card">
+        <span class="stat-card__label">Rata-rata per transaksi</span>
+        <strong id="stat-average" class="stat-card__value">-</strong>
+        <span class="muted small">Pendapatan dibagi jumlah transaksi</span>
+      </article>
+    </section>
+
+    <section class="dashboard-charts" aria-label="Grafik dashboard">
+      <article class="panel chart-panel chart-panel--revenue">
+        <div class="panel__head chart-panel__head">
+          <div>
+            <h2 id="revenue-title">Tren pendapatan</h2>
+            <p id="revenue-subtitle" class="muted small"></p>
+          </div>
+          <div class="chart-period" role="group" aria-label="Periode tren pendapatan">
+            <button class="btn btn--ghost is-selected" type="button" data-period="7" aria-pressed="true">7 hari</button>
+            <button class="btn btn--ghost" type="button" data-period="30" aria-pressed="false">30 hari</button>
+          </div>
+        </div>
+        <div id="revenue-loading" class="loading">Memuat tren pendapatan...</div>
+        <div id="revenue-error" class="alert alert--error" role="alert" hidden></div>
+        <div id="revenue-empty" class="empty-state" hidden>Belum ada transaksi pada periode ini.</div>
+        <p id="revenue-summary" class="chart-summary" hidden></p>
+        <div id="revenue-chart" class="chart-wrap" hidden></div>
+        <p id="revenue-note" class="chart-note muted small" hidden></p>
+      </article>
+
+      <article class="panel chart-panel">
+        <div class="panel__head chart-panel__head">
+          <div>
+            <h2>Stok per kategori</h2>
+            <p class="muted small">Jumlah stok produk aktif</p>
+          </div>
+        </div>
+        <div id="stock-loading" class="loading">Memuat stok per kategori...</div>
+        <div id="stock-error" class="alert alert--error" role="alert" hidden></div>
+        <div id="stock-empty" class="empty-state" hidden>Belum ada produk aktif untuk ditampilkan.</div>
+        <p id="stock-summary" class="chart-summary" hidden></p>
+        <div id="stock-chart" class="chart-wrap" hidden></div>
+      </article>
+    </section>
+
+    <section class="panel">
+      <div class="panel__head">
+        <h2>Stok menipis (stok &le; 10)</h2>
+        <a href="products.html">Lihat semua produk</a>
+      </div>
+      <div id="low-stock-loading" class="loading">Memuat ringkasan...</div>
+      <div id="low-stock-error" class="alert alert--error" role="alert" hidden></div>
+      <div id="low-stock-empty" class="empty-state" hidden>Tidak ada produk dengan stok menipis.</div>
+      <div id="low-stock-wrap" class="table-wrap" hidden>
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Produk</th>
+              <th class="num">Stok tersisa</th>
+              <th class="actions">Aksi</th>
+            </tr>
+          </thead>
+          <tbody id="low-stock-body"></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <div id="chart-tooltip" class="chart-tooltip" role="tooltip" hidden></div>
+
+  <script src="../js/config.js"></script>
+  <script src="../js/utils.js"></script>
+  <script src="../js/auth.js"></script>
+  <script src="../js/api.js"></script>
+  <script src="../js/layout.js"></script>
+  <script src="../js/dashboard.js"></script>
+</body>
+</html>

@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Produk - POS UKK</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body data-page="products">
+  <header class="app-header">
+    <div class="app-header__inner">
+      <a class="brand" href="dashboard.html">
+        <span class="brand__mark">POS</span>
+        <span>POS UKK</span>
+      </a>
+      <nav class="main-nav" aria-label="Navigasi utama">
+        <a href="dashboard.html" data-nav="dashboard">Dashboard</a>
+        <a href="pos.html" data-nav="pos">Kasir</a>
+        <a href="products.html" data-nav="products">Produk</a>
+        <a href="settings.html" data-nav="settings" data-admin-only hidden>Pengaturan</a>
+        <a href="transactions.html" data-nav="transactions">Riwayat</a>
+      </nav>
+      <div class="user-box">
+        <span id="nav-user" class="user-box__name">-</span>
+        <span id="nav-role" class="badge">-</span>
+        <button id="logout-btn" class="btn btn--ghost btn--small" type="button">Keluar</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="page">
+    <section class="page-head">
+      <div>
+        <h1>Produk</h1>
+        <p class="muted">
+          Daftar produk aktif. Menambah, mengubah, dan menghapus produk hanya untuk admin.
+        </p>
+      </div>
+      <div class="head-actions">
+        <button id="add-product-btn" class="btn btn--primary" type="button" data-admin-only hidden>
+          Tambah Produk
+        </button>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="toolbar">
+        <label class="field field--grow" for="product-search">
+          Cari produk
+          <input id="product-search" type="search" placeholder="Cari nama atau kategori...">
+        </label>
+        <label class="field" for="category-filter">
+          Kategori
+          <select id="category-filter">
+            <option value="">Semua kategori</option>
+          </select>
+        </label>
+        <button id="reset-filter-btn" class="btn btn--ghost" type="button">Reset</button>
+        <span id="product-count" class="muted small"></span>
+      </div>
+
+      <div id="products-alert" class="alert alert--error" role="alert" hidden></div>
+      <div id="products-loading" class="loading">Memuat produk...</div>
+      <div id="products-empty" class="empty-state" hidden>Tidak ada produk yang cocok.</div>
+
+      <div id="products-table-wrap" class="table-wrap" hidden>
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Produk</th>
+              <th>Kategori</th>
+              <th class="num">Harga</th>
+              <th class="num">Stok</th>
+              <th id="actions-header" class="actions" data-admin-only hidden>Aksi</th>
+            </tr>
+          </thead>
+          <tbody id="products-body"></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <div id="product-modal" class="modal" hidden>
+    <div class="modal__backdrop" data-close-product-modal></div>
+    <div class="modal__panel" role="dialog" aria-modal="true" aria-labelledby="product-modal-title">
+      <div class="modal__head">
+        <h2 id="product-modal-title">Tambah Produk</h2>
+        <button class="icon-btn" type="button" aria-label="Tutup" data-close-product-modal>&times;</button>
+      </div>
+
+      <form id="product-form" class="form-grid" novalidate>
+        <div id="product-form-alert" class="alert alert--error" role="alert" hidden></div>
+
+        <label class="field" for="product-name">
+          Nama produk *
+          <input id="product-name" type="text" maxlength="100" required>
+        </label>
+
+        <label class="field" for="product-category">
+          Kategori *
+          <input id="product-category" type="text" list="category-options" maxlength="50" required>
+          <datalist id="category-options"></datalist>
+        </label>
+
+        <div class="form-row">
+          <label class="field" for="product-price">
+            Harga (Rp) *
+            <input id="product-price" type="number" min="0" step="1" required>
+          </label>
+          <label class="field" for="product-stock">
+            Stok *
+            <input id="product-stock" type="number" min="0" step="1" required>
+          </label>
+        </div>
+
+        <label class="field" for="product-image">
+          Gambar (opsional)
+          <input id="product-image" type="file" accept="image/jpeg,image/png,image/gif,image/webp">
+          <span class="form-note">JPG, PNG, GIF, atau WebP. Maksimal 2 MB.</span>
+        </label>
+
+        <div id="image-preview-wrap" class="image-preview" hidden>
+          <img id="image-preview" src="" alt="Pratinjau gambar produk">
+          <span class="muted small">Pratinjau gambar yang akan diunggah.</span>
+        </div>
+
+        <p id="image-note" class="form-note" hidden>
+          Biarkan kosong jika gambar lama tetap dipakai. Menghapus gambar belum didukung backend.
+        </p>
+
+        <div class="modal__footer">
+          <button class="btn btn--ghost" type="button" data-close-product-modal>Batal</button>
+          <button id="product-submit-btn" class="btn btn--primary" type="submit">Simpan</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="../js/config.js"></script>
+  <script src="../js/utils.js"></script>
+  <script src="../js/auth.js"></script>
+  <script src="../js/api.js"></script>
+  <script src="../js/layout.js"></script>
+  <script src="../js/products.js"></script>
+</body>
+</html>

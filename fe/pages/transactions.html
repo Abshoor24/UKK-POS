@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Riwayat Transaksi - POS UKK</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body data-page="transactions">
+  <header class="app-header">
+    <div class="app-header__inner">
+      <a class="brand" href="dashboard.html">
+        <span class="brand__mark">POS</span>
+        <span>POS UKK</span>
+      </a>
+      <nav class="main-nav" aria-label="Navigasi utama">
+        <a href="dashboard.html" data-nav="dashboard">Dashboard</a>
+        <a href="pos.html" data-nav="pos">Kasir</a>
+        <a href="products.html" data-nav="products">Produk</a>
+        <a href="settings.html" data-nav="settings" data-admin-only hidden>Pengaturan</a>
+        <a href="transactions.html" data-nav="transactions">Riwayat</a>
+      </nav>
+      <div class="user-box">
+        <span id="nav-user" class="user-box__name">-</span>
+        <span id="nav-role" class="badge">-</span>
+        <button id="logout-btn" class="btn btn--ghost btn--small" type="button">Keluar</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="page">
+    <section class="page-head">
+      <div>
+        <h1>Riwayat Transaksi</h1>
+        <p id="transactions-subtitle" class="muted">
+          Kasir hanya melihat transaksi miliknya, admin melihat semua transaksi.
+        </p>
+      </div>
+    </section>
+
+    <section class="panel">
+      <form id="filter-form" class="toolbar">
+        <label class="field" for="from-input">
+          Dari tanggal
+          <input id="from-input" type="date">
+        </label>
+        <label class="field" for="to-input">
+          Sampai tanggal
+          <input id="to-input" type="date">
+        </label>
+        <label class="field" for="limit-input">
+          Limit
+          <select id="limit-input">
+            <option value="10">10</option>
+            <option value="25">25</option>
+            <option value="50" selected>50</option>
+            <option value="100">100</option>
+            <option value="200">200 (maks)</option>
+          </select>
+        </label>
+        <button class="btn btn--primary" type="submit">Terapkan</button>
+        <button id="today-btn" class="btn btn--ghost" type="button">Hari ini</button>
+        <button id="reset-filter-btn" class="btn btn--ghost" type="button">Reset</button>
+      </form>
+
+      <p class="muted small">
+        Backend hanya menyediakan limit tanpa offset, jadi yang ditampilkan adalah transaksi
+        terbaru sebanyak limit. Persempit rentang tanggal untuk melihat transaksi lama.
+      </p>
+
+      <div id="transactions-alert" class="alert alert--error" role="alert" hidden></div>
+      <div id="transactions-loading" class="loading">Memuat transaksi...</div>
+      <div id="transactions-empty" class="empty-state" hidden>Belum ada transaksi pada filter ini.</div>
+
+      <div id="transactions-table-wrap" class="table-wrap" hidden>
+        <table class="table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Waktu</th>
+              <th>Kasir</th>
+              <th class="num">Item</th>
+              <th class="num">Subtotal</th>
+              <th class="num">Diskon</th>
+              <th class="num">Pajak</th>
+              <th class="num">Total</th>
+              <th class="actions">Aksi</th>
+            </tr>
+          </thead>
+          <tbody id="transactions-body"></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <script src="../js/config.js"></script>
+  <script src="../js/utils.js"></script>
+  <script src="../js/auth.js"></script>
+  <script src="../js/api.js"></script>
+  <script src="../js/layout.js"></script>
+  <script src="../js/transactions.js"></script>
+</body>
+</html>

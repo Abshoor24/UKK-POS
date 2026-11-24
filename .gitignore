@@ -1,4 +1,8 @@
-node_modules
-pos.db
+node_modules/
+*.db
+*.db-journal
+*.bak
+*.verify
 .env
-coverage
+.DS_Store
+Thumbs.db
