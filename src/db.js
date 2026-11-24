@@ -175,6 +175,12 @@ function seedUsers(db) {
     }
 }
 
+/**
+ * Mengisi produk contoh ketika tabel products masih kosong.
+ * @param {import('better-sqlite3').Database} db - Koneksi database.
+ * @returns {void}
+ * @throws {Error} Jika pengambilan jumlah produk atau penyimpanan seed gagal.
+ */
 function seedProducts(db) {
     const {total} = db.prepare('SELECT COUNT(*) AS total FROM products').get();
     if (total === 0) {

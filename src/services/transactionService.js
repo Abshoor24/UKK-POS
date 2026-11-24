@@ -9,6 +9,10 @@ const {getCalculatorRules} = require('./settingsService');
 
 
 class TransactionError extends Error {
+    /**
+     * Membuat error untuk data transaksi yang tidak valid.
+     * @param {string} message - Pesan kesalahan transaksi.
+     */
     constructor (message) {
         super(message);
         this.name = 'TransactionError';
