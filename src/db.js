@@ -19,10 +19,18 @@ const sampleProducts = [
  * @param {string} [file] lokasi file db buat memory
  * @returns {import('better-sqlite3').Database}  koneksi database
  */
-
-
 function createDB(file = path.join(__dirname, '../pos.db')) {
     const db = new Database(file);
+    return initializeDatabase(db);
+}
+
+/**
+ * Menyiapkan skema, menjalankan migrasi, dan mengisi data awal.
+ * @param {import('better-sqlite3').Database} db - Koneksi database.
+ * @returns {import('better-sqlite3').Database} Koneksi database yang siap dipakai.
+ * @throws {Error} Jika pembuatan skema, migrasi, atau seed gagal.
+ */
+function initializeDatabase(db) {
     db.pragma('foreign_keys = ON');
 
     db.exec(`
@@ -57,6 +65,16 @@ function createDB(file = path.join(__dirname, '../pos.db')) {
     FOREIGN KEY (user_id) REFERENCES users(id) 
     );
 
+    CREATE TABLE IF NOT EXISTS settings (
+    id INTEGER PRIMARY KEY CHECK (id = 1),
+    tax_rate REAL NOT NULL CHECK (tax_rate >= 0 AND tax_rate <= 1)
+    );
+
+    CREATE TABLE IF NOT EXISTS discount_tiers (
+    min_subtotal INTEGER PRIMARY KEY NOT NULL CHECK (min_subtotal >= 0),
+    rate REAL NOT NULL CHECK (rate >= 0 AND rate <= 1)
+    );
+
     CREATE TABLE IF NOT EXISTS transaction_items (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     transaction_id INTEGER NOT NULL,
@@ -76,11 +94,71 @@ function createDB(file = path.join(__dirname, '../pos.db')) {
         db.exec("ALTER TABLE products ADD COLUMN image_type TEXT");
     }
 
+    migrateTransactions(db);
     seedUsers(db);
     seedProducts(db);
+    seedSettings(db);
     return db;
 }
 
+/**
+ * Menambahkan kolom tarif dan mengisi tarif transaksi lama yang belum memilikinya.
+ * Baris dengan pembagi nol dibiarkan NULL.
+ * @param {import('better-sqlite3').Database} db - Koneksi database.
+ * @returns {void}
+ * @throws {Error} Jika perubahan skema atau pengisian tarif gagal.
+ */
+function migrateTransactions(db) {
+    const migrate = db.transaction(() => {
+        let columns = db.prepare('PRAGMA table_info(transactions)').all()
+            .map((column) => column.name);
+
+        if (!columns.includes('discount_rate')) {
+            db.exec('ALTER TABLE transactions ADD COLUMN discount_rate REAL');
+        }
+        if (!columns.includes('tax_rate')) {
+            db.exec('ALTER TABLE transactions ADD COLUMN tax_rate REAL');
+        }
+
+        db.exec(`
+            UPDATE transactions
+            SET discount_rate = ROUND(discount * 1.0 / subtotal, 4)
+            WHERE discount_rate IS NULL AND subtotal <> 0;
+
+            UPDATE transactions
+            SET tax_rate = ROUND(tax * 1.0 / (subtotal - discount), 4)
+            WHERE tax_rate IS NULL AND (subtotal - discount) <> 0;
+        `);
+    });
+
+    migrate();
+}
+
+/**
+ * Mengisi satu kali pengaturan bawaan dan tier diskon.
+ * Baris settings menjadi penanda agar tier yang dikosongkan tidak di-seed ulang.
+ * @param {import('better-sqlite3').Database} db - Koneksi database.
+ * @returns {void}
+ * @throws {Error} Jika penyimpanan pengaturan awal gagal.
+ */
+function seedSettings(db) {
+    const seed = db.transaction(() => {
+        const existing = db.prepare('SELECT id FROM settings WHERE id = 1').get();
+        if (existing) return;
+
+        db.prepare('INSERT INTO settings (id, tax_rate) VALUES (1, ?)')
+            .run(0.1);
+
+        const insertTier = db.prepare(
+            'INSERT INTO discount_tiers (min_subtotal, rate) VALUES (?, ?)'
+        );
+        insertTier.run(20000, 0.05);
+        insertTier.run(50000, 0.1);
+        insertTier.run(100000, 0.15);
+    });
+
+    seed();
+}
 
 /**
  * @param {import('better-sqlite3').Database} *db - koneksi database
@@ -109,4 +187,4 @@ function seedProducts(db) {
     }
 
 
-module.exports = { createDB };
+module.exports = { createDB, initializeDatabase, migrateTransactions };
