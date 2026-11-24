@@ -19,10 +19,14 @@ const DISCOUNT_TIERS = [
 /**
  * Menentukan persentase diskon berdasarkan subtotal.
  * @param {number} subtotal - Total harga sebelum diskon.
+ * @param {Array<{minSubtotal: number, rate: number}>} [tiers=DISCOUNT_TIERS]
+ *        Tingkat diskon; daftar disalin sebelum diurutkan.
  * @returns {number} Persentase diskon (0 bila tidak mencapai batas pertama).
+ * @throws {TypeError} Jika tiers tidak dapat diiterasi.
  */
-function getDiscountRate(subtotal) {
-    for (const tier of DISCOUNT_TIERS) {
+function getDiscountRate(subtotal, tiers = DISCOUNT_TIERS) {
+    const sortedTiers = [...tiers].sort((a, b) => b.minSubtotal - a.minSubtotal);
+    for (const tier of sortedTiers) {
         if (subtotal >= tier.minSubtotal) return tier.rate;
     }
     return 0;
@@ -31,11 +35,16 @@ function getDiscountRate(subtotal) {
 /**
  * Menghitung subtotal, diskon, pajak, dan total bayar.
  * Urutan: subtotal -> diskon -> pajak (dari harga setelah diskon) -> total.
- * @param {Array<{price: number, qty: number}>} items item - daftar item yang dibeli
+ * @param {Array<{price: number, qty: number}>} items - Daftar item yang dibeli.
+ * @param {{taxRate?: number, tiers?: Array<{minSubtotal: number, rate: number}>}} [rules={}]
+ *        Tarif pajak dan tier diskon opsional.
  * @returns {{ subtotal: number, discount: number, tax: number, total: number }}
  * @throws {Error} jika price atau qty bukan angka yang valid
  */
-function calculateTotal(items) {
+function calculateTotal(items, rules = {}) {
+    const taxRate = rules.taxRate === undefined ? TAX_RATE : rules.taxRate;
+    const tiers = rules.tiers === undefined ? DISCOUNT_TIERS : rules.tiers;
+
     for (const item of items) {
         if (!Number.isFinite(item.price) || !Number.isFinite(item.qty)) {
             throw new Error('Price dan qty harus berupa angka yang valid');
@@ -51,8 +60,8 @@ function calculateTotal(items) {
     }
 
     const subtotal = items.reduce((sum, item) => sum + item.price * item.qty, 0);
-    const discount = Math.round(subtotal * getDiscountRate(subtotal));
-    const tax = Math.round((subtotal - discount) * TAX_RATE);
+    const discount = Math.round(subtotal * getDiscountRate(subtotal, tiers));
+    const tax = Math.round((subtotal - discount) * taxRate);
     const total = subtotal - discount + tax;
 
     return { subtotal, discount, tax, total };

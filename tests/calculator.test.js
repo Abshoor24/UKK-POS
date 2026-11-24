@@ -87,4 +87,129 @@ describe('calculateTotal', () => {
     expect(() => calculateTotal([{ price: -1, qty: 1 }])).toThrow();
     expect(() => calculateTotal([{ price: '5000', qty: 1 }])).toThrow();
   });
+
+  test('aturan bawaan tetap menghasilkan contoh 58.000 -> 57.420', () => {
+    const result = calculateTotal([
+      { price: 25000, qty: 1 },
+      { price: 28000, qty: 1 },
+      { price: 5000, qty: 1 },
+    ]);
+
+    expect(result).toEqual({
+      subtotal: 58000,
+      discount: 5800,
+      tax: 5220,
+      total: 57420,
+    });
+  });
+
+  test('aturan kustom memakai pajak dan tier yang dikirim', () => {
+    const result = calculateTotal(
+      [{ price: 58000, qty: 1 }],
+      { taxRate: 0.12, tiers: [{ minSubtotal: 50000, rate: 0.12 }] }
+    );
+
+    expect(result).toEqual({
+      subtotal: 58000,
+      discount: 6960,
+      tax: 6125,
+      total: 57165,
+    });
+  });
+
+  test('tier kosong berarti tidak ada diskon', () => {
+    expect(calculateTotal(
+      [{ price: 58000, qty: 1 }],
+      { tiers: [] }
+    )).toEqual({
+      subtotal: 58000,
+      discount: 0,
+      tax: 5800,
+      total: 63800,
+    });
+  });
+
+  test('taxRate nol menghasilkan pajak nol', () => {
+    expect(calculateTotal(
+      [{ price: 58000, qty: 1 }],
+      { taxRate: 0 }
+    )).toEqual({
+      subtotal: 58000,
+      discount: 5800,
+      tax: 0,
+      total: 52200,
+    });
+  });
+
+  test('hanya taxRate yang dikirim tetap memakai tier bawaan', () => {
+    expect(calculateTotal(
+      [{ price: 58000, qty: 1 }],
+      { taxRate: 0.12 }
+    )).toEqual({
+      subtotal: 58000,
+      discount: 5800,
+      tax: 6264,
+      total: 58464,
+    });
+  });
+
+  test('hanya tiers yang dikirim tetap memakai pajak bawaan', () => {
+    expect(calculateTotal(
+      [{ price: 58000, qty: 1 }],
+      { tiers: [{ minSubtotal: 50000, rate: 0.12 }] }
+    )).toEqual({
+      subtotal: 58000,
+      discount: 6960,
+      tax: 5104,
+      total: 56144,
+    });
+  });
+
+  test('tier yang tidak berurutan tetap memilih batas terbesar yang cocok', () => {
+    const tiers = [
+      { minSubtotal: 20000, rate: 0.05 },
+      { minSubtotal: 50000, rate: 0.12 },
+    ];
+
+    expect(calculateTotal(
+      [{ price: 58000, qty: 1 }],
+      { taxRate: 0.12, tiers }
+    )).toEqual({
+      subtotal: 58000,
+      discount: 6960,
+      tax: 6125,
+      total: 57165,
+    });
+  });
+
+  test('subtotal tepat di batas tier menerima diskon tier tersebut', () => {
+    expect(getDiscountRate(50000, [
+      { minSubtotal: 50000, rate: 0.12 },
+    ])).toBe(0.12);
+  });
+
+  test('pemanggilan tidak mengubah urutan array tiers pemanggil', () => {
+    const tiers = [
+      { minSubtotal: 20000, rate: 0.05 },
+      { minSubtotal: 50000, rate: 0.12 },
+    ];
+    const originalOrder = [...tiers];
+
+    calculateTotal([{ price: 58000, qty: 1 }], { tiers });
+
+    expect(tiers).toEqual(originalOrder);
+  });
+
+  test('Math.round membulatkan hasil pajak .5 ke atas', () => {
+    // Subtotal 5, tanpa diskon; pajak 5 x 10% = 0,5 -> 1; total = 5 + 1 = 6.
+    expect(calculateTotal(
+      [{ price: 5, qty: 1 }],
+      { tiers: [] }
+    )).toEqual({
+      subtotal: 5,
+      discount: 0,
+      tax: 1,
+      total: 6,
+    });
+  });
 });
