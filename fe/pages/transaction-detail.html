@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Detail Transaksi - POS UKK</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body data-page="transaction-detail">
+  <header class="app-header">
+    <div class="app-header__inner">
+      <a class="brand" href="dashboard.html">
+        <span class="brand__mark">POS</span>
+        <span>POS UKK</span>
+      </a>
+      <nav class="main-nav" aria-label="Navigasi utama">
+        <a href="dashboard.html" data-nav="dashboard">Dashboard</a>
+        <a href="pos.html" data-nav="pos">Kasir</a>
+        <a href="products.html" data-nav="products">Produk</a>
+        <a href="settings.html" data-nav="settings" data-admin-only hidden>Pengaturan</a>
+        <a href="transactions.html" data-nav="transactions">Riwayat</a>
+      </nav>
+      <div class="user-box">
+        <span id="nav-user" class="user-box__name">-</span>
+        <span id="nav-role" class="badge">-</span>
+        <button id="logout-btn" class="btn btn--ghost btn--small" type="button">Keluar</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="page">
+    <section class="page-head">
+      <div>
+        <h1>Detail Transaksi</h1>
+        <p id="detail-subtitle" class="muted">Struk transaksi yang dapat dicetak.</p>
+      </div>
+      <div class="head-actions">
+        <a id="back-link" class="btn btn--ghost" href="transactions.html">Kembali</a>
+        <button id="print-btn" class="btn btn--primary" type="button" hidden>Cetak Struk</button>
+      </div>
+    </section>
+
+    <div id="detail-alert" class="alert alert--error" role="alert" hidden></div>
+    <div id="detail-loading" class="loading">Memuat transaksi...</div>
+
+    <section id="detail-content" class="panel" hidden>
+      <div id="receipt-area" class="receipt-wrap"></div>
+      <!-- <p class="receipt-note muted small">
+        Nominal uang diterima dan kembalian tidak disimpan oleh backend, sehingga tidak muncul
+        pada struk riwayat.
+      </p> -->
+    </section>
+  </main>
+
+  <script src="../js/config.js"></script>
+  <script src="../js/utils.js"></script>
+  <script src="../js/auth.js"></script>
+  <script src="../js/api.js"></script>
+  <script src="../js/layout.js"></script>
+  <script src="../js/receipt.js"></script>
+  <script src="../js/transaction-detail.js"></script>
+</body>
+</html>

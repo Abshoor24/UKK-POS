@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pengaturan - POS UKK</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body data-page="settings">
+  <header class="app-header">
+    <div class="app-header__inner">
+      <a class="brand" href="dashboard.html">
+        <span class="brand__mark">POS</span>
+        <span>POS UKK</span>
+      </a>
+      <nav class="main-nav" aria-label="Navigasi utama">
+        <a href="dashboard.html" data-nav="dashboard">Dashboard</a>
+        <a href="pos.html" data-nav="pos">Kasir</a>
+        <a href="products.html" data-nav="products">Produk</a>
+        <a href="settings.html" data-nav="settings" data-admin-only hidden>Pengaturan</a>
+        <a href="transactions.html" data-nav="transactions">Riwayat</a>
+      </nav>
+      <div class="user-box">
+        <span id="nav-user" class="user-box__name">-</span>
+        <span id="nav-role" class="badge">-</span>
+        <button id="logout-btn" class="btn btn--ghost btn--small" type="button">Keluar</button>
+      </div>
+    </div>
+  </header>
+
+  <main id="settings-page" class="page" hidden>
+    <section class="page-head">
+      <div>
+        <h1>Pengaturan</h1>
+        <p class="muted">Atur pajak dan tingkat diskon transaksi.</p>
+      </div>
+    </section>
+
+    <div id="settings-alert" class="alert alert--error" role="alert" hidden></div>
+    <div id="settings-loading" class="loading">Memuat pengaturan...</div>
+
+    <section id="settings-panel" class="panel" hidden>
+      <p class="form-note">
+        Perubahan hanya berlaku untuk transaksi berikutnya. Riwayat lama tidak berubah.
+      </p>
+
+      <form id="settings-form" class="form-grid" novalidate>
+        <label class="field" for="tax-percent">
+          Pajak (%)
+          <input id="tax-percent" type="number" min="0" max="100" step="0.01"
+            inputmode="decimal" required>
+        </label>
+
+        <div>
+          <div class="table-wrap">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Subtotal minimum (Rp)</th>
+                  <th>Diskon (%)</th>
+                  <th class="actions">Aksi</th>
+                </tr>
+              </thead>
+              <tbody id="discount-tiers-body"></tbody>
+            </table>
+          </div>
+          <p class="form-note">
+            Daftar tingkat boleh kosong; jika kosong, transaksi tidak mendapat diskon.
+          </p>
+          <button id="add-tier-button" class="btn btn--ghost" type="button">
+            Tambah tingkat
+          </button>
+        </div>
+
+        <div class="head-actions">
+          <button id="save-settings-button" class="btn btn--primary" type="submit">
+            Simpan
+          </button>
+        </div>
+      </form>
+    </section>
+  </main>
+
+  <script src="../js/config.js"></script>
+  <script src="../js/utils.js"></script>
+  <script src="../js/auth.js"></script>
+  <script src="../js/api.js"></script>
+  <script src="../js/layout.js"></script>
+  <script src="../js/settings.js"></script>
+</body>
+</html>

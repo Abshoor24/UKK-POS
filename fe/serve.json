@@ -1,0 +1,12 @@
+{
+  "cleanUrls": false,
+  "trailingSlash": false,
+  "rewrites": [
+    { "source": "/pages/dashboard", "destination": "/pages/dashboard.html" },
+    { "source": "/pages/pos", "destination": "/pages/pos.html" },
+    { "source": "/pages/products", "destination": "/pages/products.html" },
+    { "source": "/pages/settings", "destination": "/pages/settings.html" },
+    { "source": "/pages/transactions", "destination": "/pages/transactions.html" },
+    { "source": "/pages/transaction-detail", "destination": "/pages/transaction-detail.html" }
+  ]
+}

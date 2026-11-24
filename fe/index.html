@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Masuk - POS UKK</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body data-page="login" class="login-page">
+  <main class="login-wrap">
+    <section class="login-card" aria-labelledby="login-title">
+      <div class="login-brand">
+        <span class="brand__mark">POS</span>
+        <span>POS UKK</span>
+      </div>
+
+      <h1 id="login-title">Masuk ke aplikasi</h1>
+      <p class="muted">Gunakan akun yang terdaftar pada backend.</p>
+
+      <form id="login-form" class="login-form" novalidate>
+        <div id="login-alert" class="alert alert--error" role="alert" hidden></div>
+
+        <label class="field" for="username">
+          Username
+          <input id="username" name="username" type="text" autocomplete="username"
+            placeholder="Masukkan username" required autofocus>
+        </label>
+
+        <label class="field" for="password">
+          Password
+          <input id="password" name="password" type="password" autocomplete="current-password"
+            placeholder="Masukkan password" required>
+        </label>
+
+        <button id="login-btn" class="btn btn--primary btn--block" type="submit">Masuk</button>
+      </form>
+
+    </section>
+  </main>
+
+  <script src="js/config.js"></script>
+  <script src="js/utils.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/login.js"></script>
+</body>
+</html>
