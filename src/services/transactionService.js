@@ -1,5 +1,6 @@
-const {calculateTotal, getDiscountRate, TAX_RATE} = require('./calculator');
+const {calculateTotal, getDiscountRate} = require('./calculator');
 const {toNonNegativeInt} = require('./productValidator');
+const {getCalculatorRules} = require('./settingsService');
 
 /**
  * Kesalahan yang disebabkan data transaksi (bukan kerusakan server).
@@ -63,12 +64,18 @@ function normalizeItems(rawItems) {
  * Mengambil satu transaksi lengkap dengan item-itemnya.
  * @param {import('better-sqlite3').Database} db - Koneksi database.
  * @param {number} id - ID transaksi.
- * @returns {object|null} Data transaksi (struk), atau null jika tidak ada.
+ * @returns {{id: number, user_id: number, cashier: string, subtotal: number,
+ *            discount: number, tax: number, total: number,
+ *            discount_rate: number|null, tax_rate: number|null,
+ *            created_at: string,
+ *            items: Array<{product_id: number, name: string, qty: number,
+ *                          price: number, line_total: number}>}|null}
+ *          Data transaksi dengan tarif tersimpan, atau null jika tidak ada.
  */
 
 function getTransactionById(db, id) {
     const header = db
-    .prepare(`SELECT t.id, t.user_id, u.username AS cashier, t.subtotal, t.discount, t.tax, t.total, t.created_at FROM transactions t JOIN users u ON u.id = t.user_id WHERE t.id = ?`)
+    .prepare(`SELECT t.id, t.user_id, u.username AS cashier, t.subtotal, t.discount, t.tax, t.total, t.discount_rate, t.tax_rate, t.created_at FROM transactions t JOIN users u ON u.id = t.user_id WHERE t.id = ?`)
     .get(id);
 
     if (!header) return null;
@@ -82,12 +89,7 @@ function getTransactionById(db, id) {
                   ORDER BY ti.id`)
         .all(id);
 
-    return {
-        ...header,
-        discount_rate: getDiscountRate(header.subtotal),
-        tax_rate: TAX_RATE,
-        items,
-    };
+    return {...header, items};
 }
 
 /**
@@ -97,11 +99,13 @@ function getTransactionById(db, id) {
  * @param {*} rawItems - Array { product_id, qty } dari request.
  * @returns {{subtotal: number, discount: number, tax: number, total: number,
  *            discount_rate: number, tax_rate: number,
- *            items: Array<{product_id: number, name: string, price: number, qty: number,
- *                          line_total: number}>}} Total pratinjau.
+ *            items: Array<{product_id: number, name: string, price: number,
+ *                          qty: number, line_total: number}>}} Total pratinjau.
  * @throws {TransactionError} Jika keranjang atau produk tidak valid.
+ * @throws {Error} Jika pengaturan aktif belum tersedia.
  */
 function previewTransaction(db, rawItems) {
+    const rules = getCalculatorRules(db);
     const items = normalizeItems(rawItems);
     const findProduct = db.prepare(
         'SELECT id, name, price FROM products WHERE id = ? AND is_active = 1'
@@ -115,15 +119,15 @@ function previewTransaction(db, rawItems) {
         return {productId: product.id, name: product.name, price: product.price, qty};
     });
 
-    const totals = calculateTotal(lines);
+    const totals = calculateTotal(lines, rules);
 
     return {
         subtotal: totals.subtotal,
         discount: totals.discount,
         tax: totals.tax,
         total: totals.total,
-        discount_rate: getDiscountRate(totals.subtotal),
-        tax_rate: TAX_RATE,
+        discount_rate: getDiscountRate(totals.subtotal, rules.tiers),
+        tax_rate: rules.taxRate,
         items: lines.map((line) => ({
             product_id: line.productId,
             name: line.name,
@@ -140,17 +144,25 @@ function previewTransaction(db, rawItems) {
  * Semua penyimpanan dilakukan dalam satu database transaction:
  * jika satu langkah gagal, tidak ada perubahan yang tersimpan.
  * Harga selalu diambil dari database, bukan dari client.
+ * Pengaturan dibaca di dalam transaksi yang sama dan tarifnya disimpan bersama nominal.
  * @param {import('better-sqlite3').Database} db - Koneksi database.
  * @param {number} userId - ID kasir yang membuat transaksi.
  * @param {*} rawItems - Array { product_id, qty } dari request.
- * @returns {object} Struk transaksi yang baru dibuat.
+ * @returns {{id: number, user_id: number, cashier: string, subtotal: number,
+ *            discount: number, tax: number, total: number,
+ *            discount_rate: number, tax_rate: number, created_at: string,
+ *            items: Array<{product_id: number, name: string, qty: number,
+ *                          price: number, line_total: number}>}}
+ *          Struk transaksi yang baru dibuat.
  * @throws {TransactionError} Jika keranjang, produk, atau stok tidak valid.
+ * @throws {Error} Jika pengaturan aktif belum tersedia atau penyimpanan database gagal.
  */
 
 function createTransaction(db, userId, rawItems) {
     const items = normalizeItems(rawItems);
 
     const save = db.transaction(() => {
+    const rules = getCalculatorRules(db);
     const findProduct = db.prepare(`
             SELECT id, name, price, stock FROM products WHERE id = ? AND is_active = 1
             `);
@@ -168,11 +180,22 @@ function createTransaction(db, userId, rawItems) {
     });
     
     
-    const totals = calculateTotal(lines);
+    const totals = calculateTotal(lines, rules);
+    const discountRate = getDiscountRate(totals.subtotal, rules.tiers);
 
     const header = db
-        .prepare(`INSERT INTO transactions (user_id, subtotal, discount, tax, total) VALUES(?, ?, ?, ?, ?)`)
-        .run(userId, totals.subtotal, totals.discount, totals.tax, totals.total);
+        .prepare(`INSERT INTO transactions
+                  (user_id, subtotal, discount, tax, total, discount_rate, tax_rate)
+                  VALUES (?, ?, ?, ?, ?, ?, ?)`)
+        .run(
+            userId,
+            totals.subtotal,
+            totals.discount,
+            totals.tax,
+            totals.total,
+            discountRate,
+            rules.taxRate
+        );
         
         const transactionId = header.lastInsertRowid;
         
